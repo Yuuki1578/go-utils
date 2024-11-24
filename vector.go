@@ -13,46 +13,28 @@ const (
 
 // Basic vector, capable of appending, popping, removing, etc.
 type Vector[T any] struct {
-	__slice []T
-	__len   uint64
-	__cap   uint64
-}
-
-// Get the vector length
-func (this *Vector[T]) Len() uint64 {
-	if this != nil {
-		return this.__len
-	}
-
-	return 0
-}
-
-// Get the vector capacity
-func (this *Vector[T]) Cap() uint64 {
-	if this != nil {
-		return this.__cap
-	}
-
-	return 0
+	Slice []T
+	Len   uint64
+	Cap   uint64
 }
 
 // Update the length and capacity of the vector.
 func (this *Vector[T]) updateStatus() {
-	if this.__slice == nil {
+	if this == nil || this.Slice == nil {
 		return
 	}
 
-	this.__len = uint64(len(this.__slice))
-	this.__cap = uint64(cap(this.__slice))
+	this.Len = uint64(len(this.Slice))
+	this.Cap = uint64(cap(this.Slice))
 }
 
 // Initialize a vector with default capacity and allocates the slices with the capacity provided first.
 // In fact, this function is an abstraction over builtin function 'make'.
 func WithCapacity[T any](capacity uint64) Vector[T] {
 	return Vector[T]{
-		__slice: make([]T, 0, capacity),
-		__len:   0,
-		__cap:   capacity,
+		Slice: make([]T, 0, capacity),
+		Len:   0,
+		Cap:   capacity,
 	}
 }
 
@@ -72,16 +54,16 @@ func (this *Vector[T]) AddCapacity(capacity uint64) error {
 		return errors.New(NIL_VALUE_ACCESS)
 	}
 
-	if this.__slice == nil {
+	if this.Slice == nil {
 		*this = WithCapacity[T](capacity)
 		return nil
 	}
 
-	var _ = copy(safeCopy, this.__slice)
+	var _ = copy(safeCopy, this.Slice)
 
-	this.__slice = nil
+	this.Slice = nil
 	*this = WithCapacity[T](uint64(cap(safeCopy) + int(capacity)))
-	this.__slice = append(this.__slice, safeCopy...)
+	this.Slice = append(this.Slice, safeCopy...)
 	this.updateStatus()
 
 	safeCopy = nil
@@ -95,7 +77,7 @@ func (this *Vector[T]) Clear() {
 		return
 	}
 
-	this.__slice = nil
+	this.Slice = nil
 	*this = New[T]()
 	this.updateStatus()
 }
@@ -106,17 +88,17 @@ func (this *Vector[T]) Strip() {
 		return
 	}
 
-	this.__slice = slices.Clip(this.__slice)
+	this.Slice = slices.Clip(this.Slice)
 	this.updateStatus()
 }
 
 // Reversing the vector
 func (this *Vector[T]) Reverse() error {
-	if this == nil || this.__slice == nil {
+	if this == nil || this.Slice == nil {
 		return errors.New(NIL_VALUE_ACCESS)
 	}
 
-	slices.Reverse(this.__slice)
+	slices.Reverse(this.Slice)
 
 	return nil
 }
@@ -128,11 +110,11 @@ func (this *Vector[T]) Append(element T) error {
 		return errors.New(NIL_VALUE_ACCESS)
 	}
 
-	if this.__slice == nil {
+	if this.Slice == nil {
 		*this = New[T]()
 	}
 
-	this.__slice = append(this.__slice, element)
+	this.Slice = append(this.Slice, element)
 	this.updateStatus()
 
 	return nil
@@ -149,25 +131,25 @@ func (this *Vector[T]) Pop(index uint64) (T, error) {
 		_            int
 	)
 
-	if this == nil || this.__slice == nil {
+	if this == nil || this.Slice == nil {
 		return defaultValue, errors.New(NIL_VALUE_ACCESS)
 	}
 
-	if this.Len() >= index {
+	if this.Len >= index {
 		return defaultValue, errors.New(INDEX_OUT_OF_BOUNDS)
 	}
 
-	defaultValue = this.__slice[index]
-	leftSide = this.__slice[:index]
-	rightSide = this.__slice[index+1:]
+	defaultValue = this.Slice[index]
+	leftSide = this.Slice[:index]
+	rightSide = this.Slice[index+1:]
 
-	safeCopy = make([]T, 0, this.Cap()-1)
+	safeCopy = make([]T, 0, this.Cap-1)
 	safeCopy = append(safeCopy, leftSide...)
 	safeCopy = append(safeCopy, rightSide...)
 
 	this.Clear()
 
-	_ = copy(this.__slice, safeCopy)
+	_ = copy(this.Slice, safeCopy)
 	this.updateStatus()
 
 	safeCopy = nil
