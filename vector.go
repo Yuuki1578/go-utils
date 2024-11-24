@@ -2,8 +2,11 @@ package vector
 
 import "errors"
 
-// Compile-time constant error for attempting nil value.
-const NIL_VALUE_ACCESS string = "Error: attempting to access nil value"
+// Compile-time constant errors
+const (
+	NIL_VALUE_ACCESS    string = "Error: attempting to access nil value"
+	INDEX_OUT_OF_BOUNDS string = "Error: attempting to access invalid memory location"
+)
 
 // Basic vector, capable of appending, popping, removing, etc.
 type Vector[T any] struct {
@@ -111,6 +114,8 @@ func (this *Vector[T]) Append(element T) error {
 	return nil
 }
 
+// Popping the value out of the vector, if the instance is nil or the index is greater than / equal to instance length,
+// It will return the default value of 'T' and error.
 func (this *Vector[T]) Pop(index uint64) (T, error) {
 	var (
 		defaultValue T
@@ -120,8 +125,12 @@ func (this *Vector[T]) Pop(index uint64) (T, error) {
 		_            int
 	)
 
-	if this == nil || this.__slice == nil || index >= this.Len() {
+	if this == nil || this.__slice == nil {
 		return defaultValue, errors.New(NIL_VALUE_ACCESS)
+	}
+
+	if this.Len() >= index {
+		return defaultValue, errors.New(INDEX_OUT_OF_BOUNDS)
 	}
 
 	defaultValue = this.__slice[index]
