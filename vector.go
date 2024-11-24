@@ -1,6 +1,9 @@
 package vector
 
-import "errors"
+import (
+	"errors"
+	"slices"
+)
 
 // Compile-time constant errors
 const (
@@ -95,6 +98,27 @@ func (this *Vector[T]) Clear() {
 	this.__slice = nil
 	*this = New[T]()
 	this.updateStatus()
+}
+
+// Deallocates the remaining capacity of vector.
+func (this *Vector[T]) Strip() {
+	if this == nil {
+		return
+	}
+
+	this.__slice = slices.Clip(this.__slice)
+	this.updateStatus()
+}
+
+// Reversing the vector
+func (this *Vector[T]) Reverse() error {
+	if this == nil || this.__slice == nil {
+		return errors.New(NIL_VALUE_ACCESS)
+	}
+
+	slices.Reverse(this.__slice)
+
+	return nil
 }
 
 // Appending element from the back, return error if the instance is nil.
