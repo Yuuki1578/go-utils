@@ -5,6 +5,20 @@ import (
 	"slices"
 )
 
+type VectorIntrinsics[T any] interface {
+	AddCapacity(capacity uint64) error
+	Clear()
+	Strip()
+	Reverse()
+	Append(element T) error
+	Pop(index uint64) (T, error)
+	Remove(index uint64)
+	Len() uint64
+	Cap() uint64
+	updateStatus()
+	IntoInner() (*[]T, error)
+}
+
 // Runtime constant errors
 const (
 	nilValueAccess   string = "Error: attempting to access nil value"
@@ -186,4 +200,12 @@ func (this *Vector[T]) Cap() uint64 {
 	this.updateStatus()
 
 	return this.__cap
+}
+
+func (this *Vector[T]) IntoInner() (*[]T, error) {
+	if this == nil || this.__slice == nil {
+		return nil, errors.New(nilValueAccess)
+	}
+
+	return &this.__slice, nil
 }
